@@ -11,11 +11,13 @@ Complete workflow for preparing PR branches: stash changes, create branch, revie
 
 ### 1. Stash and Create Branch
 
+**Important:** Always pull latest main branch code before creating new branch.
+
 ```bash
 git status  # Confirm uncommitted changes exist
 git stash push -m "temp: stash before creating branch"
 git checkout main
-git pull origin main  # Use actual main branch name if different (e.g., master)
+git pull origin main  # Pull latest code from main branch (use actual main branch name if different, e.g., master)
 git checkout -b <branch-name>
 git stash pop
 ```
@@ -119,6 +121,8 @@ git commit -m "<commit-message>"
 git push -u origin <branch-name>
 ```
 
+**Critical:** Never use `--force` or `-f` flag when pushing. If push fails due to conflicts, pull and rebase/merge instead.
+
 ## Example
 
 **Scenario:** Adding a new button component
@@ -154,8 +158,9 @@ git push -u origin feat/add-button-component
 
 - **Branch conflicts**: If branch exists, ask user: delete or use different name
 - **Stash conflicts**: Resolve manually before committing
-- **Main branch**: Prefer `main`, fallback to `master` if needed
+- **Main branch**: Prefer `main`, fallback to `master` if needed. Always pull latest code before creating new branch
 - **Empty changes**: Notify user if no changes after stash pop
 - **Formatting-only changes**: Ask user to confirm if detected
 - **Code checks**: Only on modified files, only configured tools, never format untouched files
 - **Remote branch**: Check if remote branch exists before pushing
+- **Force push**: Never use `git push --force` or `git push -f`. If push fails, pull and rebase/merge instead
