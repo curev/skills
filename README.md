@@ -12,6 +12,7 @@ A collection of reusable Agent Skills for AI agents. These skills provide specia
 ## Available Skills
 
 - **prepare-pull-request** - Complete workflow for preparing PR branches: stash changes, create branch, review changes, run quality checks, generate conventional commit messages, and push.
+- **up-deps** - Update project dependencies using taze, a modern CLI tool that keeps deps fresh. Supports monorepos, version range updates, and automatic installation.
 
 ## Installation
 
