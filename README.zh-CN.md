@@ -13,6 +13,7 @@
 
 - **prepare-pull-request** - 完整的 PR 分支准备流程：暂存更改、创建分支、审查更改、运行质量检查、生成符合规范的提交信息并推送。
 - **up-deps** - 使用 taze（一个现代化的 CLI 工具）更新项目依赖，保持依赖最新。支持 monorepo、版本范围更新和自动安装。
+- **vue-jsx-best-practices** - 在 Vue 3 项目中编写 JSX 组件的专用风格指南，基于 SFC + `<script lang="tsx">` + `defineComponent` + render function 的写法。在编写 Vue 3 JSX 组件时使用。
 
 ## 安装
 
