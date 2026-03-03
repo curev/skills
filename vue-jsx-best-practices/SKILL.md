@@ -1,15 +1,15 @@
 ---
 name: vue-jsx-best-practices
-description: Exclusive style guide for writing Vue 3 code using SFC with <script lang="tsx">, defineComponent, and render functions. Use when working on Vue code in this project.
+description: Exclusive style guide for writing Vue 3 JSX using SFC with <script lang="tsx">, defineComponent, and render functions. Use when working with Vue 3 JSX/TSX components.
 ---
 
 # Vue JSX Best Practices
 
-Guidelines for Vue 3 components written with Composition API + `<script lang="tsx">` + render functions, focused on JSX/TSX style consistent with this project.
+Guidelines for Vue 3 components written with Composition API + `<script lang="tsx">` + render functions, focused on a consistent JSX/TSX style.
 
 ## Scope
 
-- This skill applies when **writing Vue code** in this project. The project uses SFC with `<script lang="tsx">` and `defineComponent` render functions as the standard style.
+- This skill applies when **writing Vue 3 JSX/TSX components**. It assumes the use of SFC with `<script lang="tsx">` and `defineComponent` render functions as the standard style.
 
 ## Why JSX instead of templates + `<script setup>`
 
@@ -20,8 +20,8 @@ Guidelines for Vue 3 components written with Composition API + `<script lang="ts
 
 ## Always use JSX, never templates or `<script setup>`
 
-- In this project we **always** use `<script lang="tsx">` + `defineComponent` + render functions to implement components.
-- We **do not** use Vue templates (`<template>`) or the `<script setup>` sugar; all view logic is expressed in JSX.
+- Prefer **`<script lang="tsx">` + `defineComponent` + render functions** to implement components.
+- Do **not** use Vue templates (`<template>`) or the `<script setup>` sugar; all view logic is expressed in JSX.
 
 ## Why SFC (`.vue`) + TSX instead of plain `.tsx`
 
