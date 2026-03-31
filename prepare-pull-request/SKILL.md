@@ -1,11 +1,11 @@
 ---
 name: prepare-pull-request
-description: Prepares pull request branches by stashing changes, creating feature branch from main, reviewing changes, running code quality checks on modified files only, generating conventional commit messages, and pushing. Use when preparing a PR, creating a branch for pull request, or committing changes following conventional commits.
+description: Prepares pull request branches by analyzing existing changes before stashing, using human-readable stash messages, syncing/merging main, deciding branch strategy when not on main, then reviewing changes, running quality checks on modified files, generating conventional commit messages, and pushing. Use when preparing a PR, creating a branch for pull request, or committing changes following conventional commits.
 ---
 
 # Prepare Pull Request Workflow
 
-Complete workflow for preparing PR branches: stash changes, create branch, review changes, run quality checks, commit, and push.
+Complete workflow for preparing PR branches: analyze changes first, stash with readable message, sync main branch, create/switch branch, review changes, run quality checks, commit, and push.
 
 ## Workflow Steps
 
@@ -24,7 +24,7 @@ git symbolic-ref -q HEAD         # Exit 0 if on branch, 128 if detached HEAD
 
 **Detached HEAD handling:** Warn user: "当前处于 detached HEAD 状态，无法创建分支。请先 `git checkout main` 或 `git checkout <branch>` 切换到有效分支。"
 
-### 2. Stash and Create Branch
+### 2. Analyze Changes, Stash, and Branch Strategy
 
 **Main branch detection:** Auto-detect default branch.
 
@@ -36,21 +36,22 @@ git remote show origin 2>/dev/null | grep "HEAD branch" | cut -d' ' -f5
 git rev-parse --verify main &>/dev/null && MAIN=main || MAIN=master
 ```
 
-**Stash with untracked files:** Include untracked and ignored (optional) for complete snapshot.
+**Analyze existing changes before stash (required):** Never stash blindly.
 
 ```bash
-git status  # Confirm uncommitted changes exist
-git stash push -u -m "temp: stash before creating branch"   # -u = --include-untracked
-# Use -a (--all) only if user explicitly needs ignored files
+git status --short
+git diff --name-status
+git diff --stat
+# Identify change intent (feat/fix/refactor/docs...) and key files first
 ```
 
-**Avoid creating branch on existing feature branch:** If current branch is NOT main/master, confirm before overwriting.
+**Stash with human-readable message:** Include why + scope.
 
 ```bash
 CURRENT=$(git rev-parse --abbrev-ref HEAD)
-# If CURRENT matches feat/*, fix/*, etc. → STOP and ask:
-# "当前在 feature 分支 <CURRENT>。创建新分支会切换离开。确认要基于 main 创建 <new-branch>？(y/n)"
-# If user says no → abort or offer branch-from-current
+STASH_MSG="wip(<CURRENT>): stash before syncing main for <branch-name> [<short-change-summary>]"
+git stash push -u -m "$STASH_MSG"   # -u = --include-untracked
+# Use -a (--all) only if user explicitly needs ignored files
 ```
 
 **Branch existence check (local + remote):**
@@ -63,13 +64,25 @@ git ls-remote --heads origin <branch-name> | grep -q . && echo "remote exists"
 # If exists: ask user — delete local/remote, use different name, or checkout existing
 ```
 
-**Workflow:**
+**If current branch is NOT main/master:** ask user before branch operations.
+
+Prompt example:
+- "当前分支是 `<CURRENT>`（非主分支）。要怎么继续？"
+- "A. 切换并创建新分支（推荐，用于新 PR）"
+- "B. 保持当前分支，直接在此分支提交并推送"
+
+If user chooses **B**, skip "create new branch" and continue commit/push on current branch.
+
+**Sync main branch and create/switch branch workflow:**
 
 ```bash
-git stash push -u -m "temp: stash before creating branch"
 git checkout $MAIN
 git pull origin $MAIN
-git checkout -b <branch-name>   # Only after existence check passes
+# Keep current branch up to date with main before creating/switching branch
+git checkout <target-branch>
+# For new branch:
+# git checkout -b <branch-name>   # Only after existence check passes
+git merge $MAIN
 git stash pop
 ```
 
@@ -213,22 +226,31 @@ git push -u origin <branch-name>
 git rev-parse --abbrev-ref HEAD          # Check branch / detached HEAD
 git rev-parse --verify main &>/dev/null && MAIN=main || MAIN=master
 
-# 2. Stash (include untracked), create branch
-git stash push -u -m "temp: stash before creating branch"
+# 2. Analyze existing changes, then stash with readable message
+git status --short
+git diff --name-status
+git diff --stat
+git stash push -u -m "wip(feat/other-pr): stash before syncing main for feat/add-button-component [add button component]"
+
+# 3. If current branch is not main/master, ask user:
+# A) create/switch to new branch, or B) keep current branch and continue on it
+
+# 4. Sync main and create/switch branch
 git checkout $MAIN && git pull origin $MAIN
 # Check branch exists: git rev-parse --verify feat/add-button-component
 git checkout -b feat/add-button-component
+git merge $MAIN
 git stash pop  # Handle conflicts if any
 
-# 3. Review changes
+# 5. Review changes
 git diff
 git diff --name-only  # Output: src/components/Button.tsx
 
-# 4. Run checks on modified files only
+# 6. Run checks on modified files only
 npx eslint src/components/Button.tsx
 npx prettier --check src/components/Button.tsx
 
-# 5. Generate commit (detected Chinese from git log)
+# 7. Generate commit (detected Chinese from git log)
 git log --oneline -10
 git add src/components/Button.tsx       # Only modified files, not git add .
 git commit -m "feat(ui): 添加按钮组件
@@ -236,7 +258,7 @@ git commit -m "feat(ui): 添加按钮组件
 - 新增 ButtonPart 类型支持
 - 实现 part-button 组件"
 
-# 6. Push (check remote first)
+# 8. Push (check remote first)
 git ls-remote origin &>/dev/null
 git push -u origin feat/add-button-component
 ```
@@ -244,11 +266,13 @@ git push -u origin feat/add-button-component
 ## Important Notes
 
 - **Repository state**: Detect branch vs detached HEAD first. Detached HEAD → cannot create branch, must checkout first
-- **User on feature branch**: If on feat/*, fix/*, etc., confirm before switching to main to create new branch
+- **Analyze before stash**: Must run `git status --short`, `git diff --name-status`, `git diff --stat` first
+- **Non-main branch decision**: If current branch is not main/master, ask user whether to create/switch to a new branch or continue on current branch
+- **Stash message**: Use human-readable message with branch and short change summary
 - **Stash**: Use `-u` (--include-untracked) so new files are stashed
 - **Stash pop conflicts**: Inform user, resolve manually, then `git stash drop`. Do not pop again
 - **Branch exists**: Check local + remote before `checkout -b`. If exists → delete, rename, or checkout
-- **Main branch**: Auto-detect `main` or `master` via `git rev-parse --verify`
+- **Main branch sync**: Pull latest main/master and merge main into target branch before `stash pop`
 - **Commit**: Only add modified files from diff, not `git add .`
 - **Remote before push**: Run `git ls-remote origin` to verify reachable. If unreachable, do not push
 - **Force push**: Never use `git push --force` or `-f`. If push fails, pull and rebase/merge instead
